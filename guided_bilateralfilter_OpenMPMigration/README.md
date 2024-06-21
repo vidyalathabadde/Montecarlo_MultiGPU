@@ -1,6 +1,6 @@
 # `MonteCarloMultiGPU` Sample
  
-This sample uses OpenMP directives to perform a simple bilateral filter on an image and measures performance. The original OpenACC source code is migrated to OpenMP to Offload on Intel® Platforms.
+This sample uses OpenMP directives to implement a Monte Carlo simulation to estimate the price of a European call option and its confidence interval. The original OpenACC source code is migrated to OpenMP to Offload on Intel® Platforms.
 
 | Area                  | Description
 |:---                       |:---
@@ -10,8 +10,7 @@ This sample uses OpenMP directives to perform a simple bilateral filter on an im
 
 ## Purpose
 
-Bilateral filter is an edge-preserving nonlinear smoothing filter. There are three parameters distribute to the filter: gaussian delta, euclidean delta and iterations.
-When the euclidean delta increases, most of the fine texture will be filtered away, yet all contours are as crisp as in the original image. If the euclidean delta approximates to ∞, the filter becomes a normal gaussian filter. Fine texture will blur more with larger gaussian delta. Multiple iterations have the effect of flattening the colors in an image considerably, but without blurring edges, which produces a cartoon effect.
+The purpose of this sample is to estimate the expected value of a European call option and provide a measure of the confidence interval around this estimate using Monte Carlo simulation. Monte Carlo simulation is a statistical technique that uses random sampling to approximate complex mathematical and physical systems. This particualr sample demonstartes how it can be offloaded to GPUs using openmp directives and obtain good performance.
 
 > **Note**: We use intel-application-migration-tool-for-openacc-to-openmp which assists developers in porting OpenACC code automatically to OpenMP code. 
 
