@@ -1,20 +1,39 @@
-# SPDX-FileCopyrightText: Copyright (c) 2017 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
-#
-# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
-# property and proprietary rights in and to this material, related
-# documentation and any modifications thereto. Any use, reproduction,
-# disclosure or distribution of this material and related documentation
-# without an express license agreement from NVIDIA CORPORATION or
-# its affiliates is strictly prohibited.
+# Define the compiler
+CC = icx
 
-EXECUTABLE = MonteCarloMultiGPU$(EXESUFFIX)
-SRCFILES = MonteCarloMultiGPU.c
-ifneq (,$(findstring -ta,$(OPT)))
-    CUDAFLAGS = -Mcuda
-else
-    CUDAFLAGS = -cuda
-endif
-EXTRAFLAGS = -mp
+# Define the compiler flags
+CFLAGS = -fiopenmp -fopenmp-targets=spir64 -DOPENACC2OPENMP_ORIGINAL_OPENMP=1
 
-include ../../common/common.mk
+# Define the include directory
+INCLUDES = -I ../../include/
+
+# Define the source files
+SRCS = ./openMP_migrated_output/MonteCarloMultiGPU_translated ../../common/argproc.c ../../common/common.c
+
+# Define the object files
+OBJS = $(SRCS:.c=.o)
+
+# Define the target executable
+TARGET = MonteCarloMultiGPU
+
+# Default rule to build the target
+all: $(TARGET)
+
+# Rule to build the target executable
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
+
+# Rule to compile the source files into object files
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Rule to run the target executable
+run: $(TARGET)
+        ./$(TARGET)
+
+# Clean rule to remove the generated files
+clean:
+	rm -f $(OBJS) $(TARGET)
+
+# Phony targets
+.PHONY: all clean
