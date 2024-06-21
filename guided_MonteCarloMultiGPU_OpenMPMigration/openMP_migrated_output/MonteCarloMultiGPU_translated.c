@@ -1,19 +1,8 @@
-/*
- *     Copyright (c) 2017, NVIDIA CORPORATION.  All rights reserved.
- *
- * NVIDIA CORPORATION and its licensors retain all intellectual property
- * and proprietary rights in and to this software, related documentation
- * and any modifications thereto.  Any use, reproduction, disclosure or
- * distribution of this software and related documentation without an express
- * license agreement from NVIDIA CORPORATION is strictly prohibited.
- */
-
 #include <omp.h>
 #include <stdio.h>
 #include <math.h>
 #include "common.h"
 #include "argproc.h"
-//#include "cuda2acc.h"
 #include "timer.h"
 #include <string.h>
 #define A1 0.31938153
@@ -39,7 +28,6 @@ float rand_float(float low, float high)
     return (1.0f - t) * low + t * high;
 }
 
-#pragma acc routine
 #pragma omp declare target
 double MoroInvCND(double P){
     const double a1 = 2.50662823884;
@@ -79,7 +67,6 @@ double MoroInvCND(double P){
 }
 #pragma omp end declare target
 
-#pragma acc routine
 #pragma omp declare target
 double NormalDistribution(unsigned int i, unsigned int pathN){
     double p = (double)(i + 1) / (double)(pathN + 1);
@@ -87,7 +74,6 @@ double NormalDistribution(unsigned int i, unsigned int pathN){
 }
 #pragma omp end declare target
 
-#pragma acc routine
 #pragma omp declare target
 static double endCallValue(double S, double X, double r, double MuByT, double VBySqrtT){
     double callValue = S * exp(MuByT + VBySqrtT * r) - X;
@@ -134,8 +120,6 @@ void MonteCarloMultiGPU(float *call_value_e_gpu, float *confidence_gpu, TOptiond
 {
     int gpu_n = omp_get_num_devices();
 
-    //#pragma acc data copyin(option_data_arr[0:OPT_N]) copyout(call_value_e_gpu[0:OPT_N],confidence_gpu[0:OPT_N]) is preferred. "enter/exit data" is used here for timing purpose
-    #pragma acc enter data create(call_value_e_gpu[0:OPT_N],confidence_gpu[0:OPT_N]) copyin(option_data_arr[0:OPT_N])
 #pragma omp target enter data map(to:option_data_arr[0:OPT_N])\
             map(alloc:call_value_e_gpu[0:OPT_N],confidence_gpu[0:OPT_N])
     {
@@ -152,7 +136,7 @@ void MonteCarloMultiGPU(float *call_value_e_gpu, float *confidence_gpu, TOptiond
             s = j * len + rem;
             e = s + len - 1;
         }
-        #pragma acc kernels loop async(j) present(call_value_e_gpu[0:OPT_N],confidence_gpu[0:OPT_N],option_data_arr[0:OPT_N])
+
 #pragma omp target teams loop map(present,alloc:call_value_e_gpu[0:OPT_N],\
             confidence_gpu[0:OPT_N],option_data_arr[0:OPT_N]) nowait
        for (int i = s; i <= e; i++) {
@@ -168,7 +152,7 @@ void MonteCarloMultiGPU(float *call_value_e_gpu, float *confidence_gpu, TOptiond
             float v_x_sqrt_t = V * sqrtf(T);
 
             float sum = 0, sum2 = 0;
-            #pragma acc loop reduction(+:sum,sum2)
+
 #pragma omp loop reduction(+:sum,sum2)
             for(unsigned int pos = 0; pos < path_n; ++pos) {
                 float sample = NormalDistribution(pos, path_n);
@@ -183,13 +167,11 @@ void MonteCarloMultiGPU(float *call_value_e_gpu, float *confidence_gpu, TOptiond
         }
     }
     }
-    //acc_wait_all();
     #pragma omp taskwait
     printf("MonteCarloMultiGPU() used time: %f (ms)\n", GetTimer());
-    #pragma acc exit data copyout(call_value_e_gpu[0:OPT_N],confidence_gpu[0:OPT_N]) delete(option_data_arr[0:OPT_N])
 #pragma omp target exit data map(from:call_value_e_gpu[0:OPT_N],\
             confidence_gpu[0:OPT_N]) map(delete:option_data_arr[0:OPT_N])
-//#pragma omp taskwait
+
 }
 
 void runtest(float thresh)
@@ -249,8 +231,6 @@ int main(int argc, char **argv)
     if (str_th)
         th = atof(str_th);
 
-//    print_gpuinfo(argc, (const char **)argv);
-
     printf("MonteCarloMultiGPU\n");
     printf("==================\n");
 
@@ -259,5 +239,3 @@ int main(int argc, char **argv)
     free_opttable(opttable);
     return 0;
 }
-
-// Code was translated using: /nfs/site/home/vbaddex/vidya/openacc/intel-application-migration-tool-for-openacc-to-openmp/src/intel-application-migration-tool-for-openacc-to-openmp MonteCarloMultiGPU.c
