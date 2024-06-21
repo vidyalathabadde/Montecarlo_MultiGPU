@@ -33,13 +33,17 @@ For more information on how to install the above Tool, visit [intel-application-
 
 ## Key Implementation Details
 
-This sample demonstrates the migration of the following OpenACC pragmas: 
-- #pragma acc kernels \
-          copyin()    \
-          copyout()   \
-          create()    \
-          if()
-- #pragma acc loop independent, gang
+This sample demonstrates the migration of the following OpenACC pragmas & APIs: 
+- #pragma acc routine
+- #pragma acc enter data create() copyin()
+- #pragma acc kernels loop async() present()
+- #pragma acc loop reduction()
+- #pragma acc exit data copyout() delete()
+- acc_get_num_devices()
+- acc_wait()
+- acc_wait_all()
+- acc_get_num_devices()
+- acc_set_device_num()
 
 
 >  **Note**: Refer to [Portability across Heterogeneous Architectures](https://www.intel.com/content/www/us/en/developer/articles/technical/openmp-accelerator-offload.html#gs.n33nuz) for general information about the migration of OpenACC to OpenMP.
@@ -70,6 +74,19 @@ The binary of the translator can be found inside intel-application-migration-too
      intel-application-migration-tool-for-openacc-to-openmp/src/intel-application-migration-tool-for-openacc-to-openmp MonteCarloMultiGPU.c
      ```
 For each given input-file, the tool will generate a translation file named <input-file>.translated and will also dump a report with translation details into a file named <input-file>.report.
+
+### Manual workarounds
+
+The tool recognizes many of the OpenACC compute and data constructs but cannot translate OpenACC API calls at the moment. One can check the generated report file which suggests the corresponsding OpenMP equivalents of the unmigrated OpenACC API calls as shown below
+
+```
+Note the following OpenACC API calls. These have NOT been translated.
+* Line 125 contains an invocation to 'acc_get_num_devices'. You can use omp_get_num_devices().
+* Line 172 contains an invocation to 'acc_wait'. Consider using #pragma omp taskwait.
+* Line 172 contains an invocation to 'acc_wait_all'. Consider using #pragma omp taskwait.
+* Line 185 contains an invocation to 'acc_get_num_devices'. You can use omp_get_num_devices().
+* Line 208 contains an invocation to 'acc_set_device_num'. You can use omp_set_default_device().
+```
 
 ## Build the `MonteCarloMultiGPU` Sample for GPU
 
