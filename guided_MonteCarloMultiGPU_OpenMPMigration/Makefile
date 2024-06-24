@@ -8,7 +8,7 @@ CFLAGS = -fiopenmp -fopenmp-targets=spir64 -DOPENACC2OPENMP_ORIGINAL_OPENMP=1
 INCLUDES = -I ../../include/
 
 # Define the source files
-SRCS = MonteCarloMultiGPU_translated.c ../../common/argproc.c ../../common/common.c
+SRCS = ./openMP_migrated_output/MonteCarloMultiGPU_translated.c ../../common/argproc.c ../../common/common.c
 
 # Define the object files
 OBJS = $(SRCS:.c=.o)
@@ -21,19 +21,19 @@ all: $(TARGET)
 
 # Rule to build the target executable
 $(TARGET): $(OBJS)
-        $(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
+	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
 
 # Rule to compile the source files into object files
 %.o: %.c
-        $(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Rule to run the target executable
 run: $(TARGET)
-        ./$(TARGET)
+	./$(TARGET)
 
 # Clean rule to remove the generated files
 clean:
-        rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(TARGET)
 
 # Phony targets
 .PHONY: all clean
