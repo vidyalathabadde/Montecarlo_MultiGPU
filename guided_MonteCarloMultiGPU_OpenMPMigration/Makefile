@@ -4,10 +4,10 @@ CC = icx
 # Define the compiler flags
 CFLAGS = -fiopenmp -fopenmp-targets=spir64 -DOPENACC2OPENMP_ORIGINAL_OPENMP=1
 
-# Define the include directory
+# Define the include directory (set the include folder path according the location in your system)
 INCLUDES = -I ../../include/
 
-# Define the source files
+# Define the source files (set the common folder path according the location in your system)
 SRCS = ./openMP_migrated_output/MonteCarloMultiGPU_translated ../../common/argproc.c ../../common/common.c
 
 # Define the object files
