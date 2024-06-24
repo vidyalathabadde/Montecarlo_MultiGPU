@@ -206,8 +206,8 @@ void runtest(float thresh)
     #pragma omp parallel num_threads(GPU_N)
 #endif // defined(OPENACC2OPENMP_ORIGINAL_OPENMP)
     {
-        omp_set_default_device(omp_get_thread_num()/*, acc_device_nvidia*/);
-        printf("GPU Device #%d\n", /*acc_get_current_cuda_device()*/omp_get_default_device());
+        omp_set_default_device(omp_get_thread_num());
+        printf("GPU Device #%d\n", omp_get_default_device());
         MonteCarloMultiGPU(call_value_e_gpu, confidence_gpu, option_data, path_n);
         printf("%s\n", (fcheck(call_value_e_cpu, call_value_e_gpu, OPT_N, thresh) ? "Test FAILS" : "Test PASSES"));
     }
