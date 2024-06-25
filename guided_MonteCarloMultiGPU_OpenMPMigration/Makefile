@@ -5,10 +5,10 @@ CC = icx
 CFLAGS = -fiopenmp -fopenmp-targets=spir64 -DOPENACC2OPENMP_ORIGINAL_OPENMP=1
 
 # Define the include directory
-INCLUDES = -I ../../include/
+#INCLUDES = -I ../../include/
 
 # Define the source files
-SRCS = ./openMP_migrated_output/MonteCarloMultiGPU_translated.c ../../common/argproc.c ../../common/common.c
+SRCS = ./openMP_migrated_output/MonteCarloMultiGPU_translated.c
 
 # Define the object files
 OBJS = $(SRCS:.c=.o)

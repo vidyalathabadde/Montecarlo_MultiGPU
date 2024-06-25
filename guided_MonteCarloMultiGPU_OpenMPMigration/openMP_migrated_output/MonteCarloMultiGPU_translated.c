@@ -1,9 +1,6 @@
 #include <omp.h>
 #include <stdio.h>
 #include <math.h>
-#include "common.h"
-#include "argproc.h"
-#include "timer.h"
 #include <string.h>
 #define A1 0.31938153
 #define A2 -0.356563782
@@ -12,7 +9,7 @@
 #define A5 1.330274429
 #define RSQRT2PI 0.39894228040143267793994605993438
 #define OPT_N 256
-
+#define ABS(A) ((A) > 0 ? (A) : -(A))
 typedef struct{
     float S;
     float X;
@@ -107,23 +104,26 @@ void MonteCarlo(float *call_value_e, float *confidence, TOptiondata option_data,
 
 void MonteCarloCPU(float *call_value_e_cpu, float *confidence_cpu, TOptiondata *option_data_arr, int path_n)
 {
-    StartTimer();
+   double start = omp_get_wtime();
 
     for(int i = 0; i < OPT_N; i++){
         MonteCarlo(call_value_e_cpu + i, confidence_cpu + i, option_data_arr[i], path_n);
     }
+    double end = omp_get_wtime();
+    double accMs = end- start;
 
-    printf("MonteCarloCPU() used time: %f (ms)\n", GetTimer());
+    printf("MonteCarloCPU() used time: %f (ms)\n", accMs);
 }
 
 void MonteCarloMultiGPU(float *call_value_e_gpu, float *confidence_gpu, TOptiondata *option_data_arr, int path_n)
 {
     int gpu_n = omp_get_num_devices();
+    double start;
 
 #pragma omp target enter data map(to:option_data_arr[0:OPT_N])\
             map(alloc:call_value_e_gpu[0:OPT_N],confidence_gpu[0:OPT_N])
     {
-    StartTimer();
+   start = omp_get_wtime();    
     int len = OPT_N / gpu_n;
     int rem = OPT_N % gpu_n;
     int s, e;
@@ -168,10 +168,23 @@ void MonteCarloMultiGPU(float *call_value_e_gpu, float *confidence_gpu, TOptiond
     }
     }
     #pragma omp taskwait
-    printf("MonteCarloMultiGPU() used time: %f (ms)\n", GetTimer());
+    double end = omp_get_wtime();
+    double accMs = end - start;
+    printf("MonteCarloMultiGPU() used time: %f (ms)\n", accMs);
 #pragma omp target exit data map(from:call_value_e_gpu[0:OPT_N],\
             confidence_gpu[0:OPT_N]) map(delete:option_data_arr[0:OPT_N])
 
+}
+int32_t fcheck(float *A, float *B, uint32_t N, float th)
+{
+    int i;
+    for (i = 0; i < N; i++) {
+        if (ABS(A[i] - B[i]) > th) {
+            printf("Test %d out of %d FAILED, %f %f\n", i, N, A[i], B[i]);
+            return 1;
+        }
+    }
+    return 0;
 }
 
 void runtest(float thresh)
@@ -218,24 +231,14 @@ void runtest(float thresh)
 int main(int argc, char **argv)
 {
     float th = 0.1;
-    const char *names[] = { "thresh" };
-    int flags[] = { 1 };
-    int map[] = { 0 };
-    struct OptionTable *opttable = make_opttable(1, names, flags, map);
 
     printf("%s Starting...\n\n", argv[0]);
 
-    argproc(argc, argv, opttable);
-
-    const char *str_th = opttable->table[0].val;
-    if (str_th)
-        th = atof(str_th);
 
     printf("MonteCarloMultiGPU\n");
     printf("==================\n");
 
     runtest(th);
 
-    free_opttable(opttable);
     return 0;
 }
