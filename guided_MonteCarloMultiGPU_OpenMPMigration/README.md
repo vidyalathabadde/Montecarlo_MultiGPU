@@ -26,7 +26,7 @@ This sample contains two versions in the following folders:
 |:---                        |:---
 | OS                         | Ubuntu* 22.04
 | Hardware                   | Intel® Gen9 <br> Intel® Gen11 <br> Intel® Data Center GPU Max
-| Software                   | Intel oneAPI Base Toolkit version 2024.1 <br> intel-application-migration-tool-for-openacc-to-openmp
+| Software                   | Intel oneAPI Base Toolkit version 2024.2 <br> intel-application-migration-tool-for-openacc-to-openmp
 
 For more information on how to install the above Tool, visit [intel-application-migration-tool-for-openacc-to-openmp](https://github.com/intel/intel-application-migration-tool-for-openacc-to-openmp)
 
